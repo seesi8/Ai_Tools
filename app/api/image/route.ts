@@ -19,11 +19,13 @@ export async function POST(request: Request) {
         return new Response("No message in the request", { status: 400 });
     }
 
-    const image = await openai.images.generate({
+    const params: any = {
         model: currentModel,
         prompt: message,
         n: number,
-    });
+    };
+
+    const image = await openai.images.generate(params);
 
     return NextResponse.json(image.data);
 }

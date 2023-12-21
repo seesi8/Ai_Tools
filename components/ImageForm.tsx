@@ -53,7 +53,7 @@ const ImageForm = ({ modelsList }: { modelsList: Array<string> }) => {
             throw new Error(response.statusText);
         }
 
-        const data: Array<{}> = await response.json();
+        const data: Array<any> = await response.json();
 
         if (!data) {
             return;
