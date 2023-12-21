@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
-const Form = ({ modelsList }: { modelsList: Array<string> }) => {
+const ImageForm = ({ modelsList }: { modelsList: Array<string> }) => {
     const messageInput = useRef<HTMLTextAreaElement | null>(null);
     // causes rerender without useEffect due to suspense boundary
     // const storedResponse = typeof localStorage !== 'undefined' ? localStorage.getItem('response') : null;
     // const initialHistory = storedResponse ? JSON.parse(storedResponse) : [];
     // const [history, setHistory] = useState<string[]>(initialHistory);
-    const [history, setHistory] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // const [models, setModels] = useState<ModelType[]>([])
     const [models, setModels] = useState(modelsList);
-    const [currentModel, setCurrentModel] = useState<string>("gpt-4");
+    const [res, setRes] = useState<Array<string>>([]);
+    const [currentModel, setCurrentModel] = useState<string>("dall-e-2");
+    const [number, setNumber] = useState(1);
 
     const handleEnter = (
         e: React.KeyboardEvent<HTMLTextAreaElement> &
@@ -27,16 +29,12 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const message = messageInput.current?.value;
-        if (message !== undefined) {
-            setHistory((prev) => [...prev, message]);
-            messageInput.current!.value = "";
-        }
 
         if (!message) {
             return;
         }
 
-        const response = await fetch("/api/response", {
+        const response = await fetch("/api/image", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -44,6 +42,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
             body: JSON.stringify({
                 message,
                 currentModel,
+                number,
             }),
         });
         console.log("Edge function returned.");
@@ -54,53 +53,20 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
             throw new Error(response.statusText);
         }
 
-        const data = response.body;
+        const data: Array<{}> = await response.json();
+
         if (!data) {
             return;
         }
 
-        const reader = data.getReader();
-        const decoder = new TextDecoder();
-        let done = false;
+        setRes(
+            data.map((value) => {
+                return value["url"] ?? "";
+            })
+        );
 
-        setHistory((prev) => [...prev, message]);
-
-        let currentResponse: string[] = [];
-        while (!done) {
-            const { value, done: doneReading } = await reader.read();
-            done = doneReading;
-            const chunkValue = decoder.decode(value);
-            // currentResponse = [...currentResponse, message, chunkValue];
-            currentResponse = [...currentResponse, chunkValue];
-            setHistory((prev) => [
-                ...prev.slice(0, -1),
-                currentResponse.join(""),
-            ]);
-            console.log("rerender");
-        }
-        console.log("rerender-2");
-        // breaks text indent on refresh due to streaming
-        // localStorage.setItem('response', JSON.stringify(history))
         setIsLoading(false);
     };
-
-    const handleReset = () => {
-        localStorage.removeItem("response");
-        setHistory([]);
-    };
-
-    // Save the 'history' state to 'localStorage' whenever it changes
-    useEffect(() => {
-        localStorage.setItem("response", JSON.stringify(history));
-    }, [history]);
-
-    // Initialize 'history' state from 'localStorage' when the component mounts
-    useEffect(() => {
-        const storedResponse = localStorage.getItem("response");
-        if (storedResponse) {
-            setHistory(JSON.parse(storedResponse));
-        }
-    }, []);
 
     const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setCurrentModel(e.target.value);
@@ -120,45 +86,32 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                 ))}
             </select>
 
-            <button
-                onClick={handleReset}
-                type="reset"
+            <input
+                name="Message"
+                type="number"
+                value={number}
+                onChange={(e) => {
+                    setNumber(parseInt(e.target.value));
+                }}
                 className="fixed top-20 right-5 p-1 rounded-md text-white dark:hover:bg-white dark:hover:text-black  disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
-            >
-                Clear History
-            </button>
+            />
             <div className="w-full mx-2 flex flex-col items-start gap-3 pt-6 last:mb-6 md:mx-auto md:max-w-3xl">
-                {isLoading
-                    ? history.map((item: any, index: number) => {
+                {!isLoading
+                    ? res.map((value) => {
                           return (
                               <div
-                                  key={index}
-                                  className={`${
-                                      index % 2 === 0
-                                          ? "bg-blue-500"
-                                          : "bg-gray-500"
-                                  } p-3 rounded-lg`}
+                                  key={value}
+                                  className="w-full aspect-[1/1] relative"
                               >
-                                  <p>{item}</p>
+                                  <Image
+                                      alt="ai generated image"
+                                      src={value}
+                                      fill
+                                  />
                               </div>
                           );
                       })
-                    : history
-                    ? history.map((item: string, index: number) => {
-                          return (
-                              <div
-                                  key={index}
-                                  className={`${
-                                      index % 2 === 0
-                                          ? "bg-blue-500"
-                                          : "bg-gray-500"
-                                  } p-3 rounded-lg`}
-                              >
-                                  <p>{item}</p>
-                              </div>
-                          );
-                      })
-                    : null}
+                    : "Loading..."}
             </div>
             <form
                 onSubmit={handleSubmit}
@@ -166,7 +119,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
             >
                 <textarea
                     name="Message"
-                    placeholder="Type your query"
+                    placeholder="Enter Image Query"
                     ref={messageInput}
                     onKeyDown={handleEnter}
                     className="w-full resize-none bg-transparent outline-none pt-4 pl-4 translate-y-1"
@@ -194,4 +147,4 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
     );
 };
 
-export default Form;
+export default ImageForm;
