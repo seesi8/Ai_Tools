@@ -42,6 +42,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
+                history,
                 message,
                 currentModel,
             }),

@@ -5,12 +5,14 @@ const openai = new OpenAI();
 type RequestData = {
     currentModel: string;
     message: string;
+    history: any;
 };
 
 export const runtime = "edge";
 
 export async function POST(request: Request) {
-    const { currentModel, message } = (await request.json()) as RequestData;
+    const { currentModel, message, history } =
+        (await request.json()) as RequestData;
 
     console.log(currentModel);
 
@@ -18,9 +20,17 @@ export async function POST(request: Request) {
         return new Response("No message in the request", { status: 400 });
     }
 
+    const messages = history.map((item: string, index: number) => {
+        if (index % 2 === 0) {
+            return { role: "user", content: item };
+        } else {
+            return { role: "assistant", content: item };
+        }
+    });
+
     const completion = await openai.chat.completions.create({
         model: currentModel,
-        messages: [{ role: "user", content: message }],
+        messages: [...messages, { role: "user", content: message }],
         stream: true,
     });
 
