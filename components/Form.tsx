@@ -87,7 +87,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
 
     const handleReset = () => {
         localStorage.removeItem("response");
-        setHistory([]);
+        setHistory(history.slice(0, -2));
     };
 
     // Save the 'history' state to 'localStorage' whenever it changes
@@ -126,7 +126,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                 type="reset"
                 className="fixed top-20 right-5 p-1 rounded-md text-white dark:hover:bg-white dark:hover:text-black  disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
             >
-                Clear History
+                Undo
             </button>
             <div className="w-full mx-2 flex flex-col items-start gap-3 pt-6 last:mb-6 md:mx-auto md:max-w-3xl">
                 {isLoading
@@ -138,7 +138,9 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                                       index % 2 === 0
                                           ? "bg-blue-500"
                                           : "bg-gray-500"
-                                  } p-3 rounded-lg mb-28`}
+                                  } p-3 rounded-lg ${
+                                      index == history.length - 1 ? "mb-28" : ""
+                                  }`}
                               >
                                   <p>{item}</p>
                               </div>
@@ -153,7 +155,9 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                                       index % 2 === 0
                                           ? "bg-blue-500"
                                           : "bg-gray-500"
-                                  } p-3 rounded-lg mb-28`}
+                                  } p-3 rounded-lg ${
+                                      index == history.length - 1 ? "mb-28" : ""
+                                  }`}
                               >
                                   <p>{item}</p>
                               </div>
