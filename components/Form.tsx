@@ -138,7 +138,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                                       index % 2 === 0
                                           ? "bg-blue-500"
                                           : "bg-gray-500"
-                                  } p-3 rounded-lg`}
+                                  } p-3 rounded-lg mb-28`}
                               >
                                   <p>{item}</p>
                               </div>
@@ -153,7 +153,7 @@ const Form = ({ modelsList }: { modelsList: Array<string> }) => {
                                       index % 2 === 0
                                           ? "bg-blue-500"
                                           : "bg-gray-500"
-                                  } p-3 rounded-lg`}
+                                  } p-3 rounded-lg mb-28`}
                               >
                                   <p>{item}</p>
                               </div>
